@@ -70,28 +70,3 @@ resource "aws_security_group" "sg_rds" {
   }
 }
 
-resource "aws_security_group" "sg_lambda" {
-  name        = "lambda-sg"
-  description = "Security Group para a Lambda de populacao do banco"
-  vpc_id      = aws_vpc.main.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "lambda-sg"
-  }
-}
-
-resource "aws_security_group_rule" "allow_lambda_to_rds" {
-  type                     = "ingress"
-  from_port                = 3306
-  to_port                  = 3306
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.sg_rds.id
-  source_security_group_id = aws_security_group.sg_lambda.id
-}
