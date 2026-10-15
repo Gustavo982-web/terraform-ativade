@@ -8,7 +8,6 @@ resource "aws_sns_topic_subscription" "email_alerta" {
   endpoint  = var.email_alertas
 }
 
--
 
 # 1) CPU do RDS (saude do banco)
 resource "aws_cloudwatch_metric_alarm" "cpu_rds" {
