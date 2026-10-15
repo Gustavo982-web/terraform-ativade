@@ -44,26 +44,33 @@ resource "aws_ecs_task_definition" "app" {
         }
       ]
       environment = [
+        { name = "NODE_ENV", value = "production" },
+        { name = "DB_MODE", value = "mysql" },
         { name = "DB_HOST", value = aws_db_instance.banco-cosmos.address },
+        { name = "DB_PORT", value = "3306" },
         { name = "DB_USER", value = var.db_username },
         { name = "DB_PASSWORD", value = var.db_password },
-        { name = "DB_NAME", value = "bancocosmo" }
+        { name = "DB_NAME", value = "bancocosmo" },
+        { name = "PORT", value = tostring(var.app_port) },
+        { name = "APP_PORT", value = tostring(var.app_port) },
+        { name = "APP_HOST", value = "0.0.0.0" }
       ]
     }
   ])
 }
 
 resource "aws_ecs_service" "app_service" {
-  name            = "servico-aplicacao-web"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.app.arn
-  launch_type     = "FARGATE"
-  desired_count   = 2
+  name                              = "servico-aplicacao-web"
+  cluster                           = aws_ecs_cluster.main.id
+  task_definition                   = aws_ecs_task_definition.app.arn
+  launch_type                       = "FARGATE"
+  desired_count                     = 2
+  health_check_grace_period_seconds = 300
 
   network_configuration {
-    subnets          = [aws_subnet.publica_a.id, aws_subnet.publica_b.id]
+    subnets          = [aws_subnet.privada_a.id, aws_subnet.privada_b.id]
     security_groups  = [aws_security_group.sg_ecs_tasks.id]
-    assign_public_ip = true
+    assign_public_ip = false
   }
 
   load_balancer {

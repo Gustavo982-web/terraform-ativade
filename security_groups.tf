@@ -48,7 +48,7 @@ resource "aws_security_group" "sg_ecs_tasks" {
 
 resource "aws_security_group" "sg_rds" {
   name        = "rds-sg"
-  description = "Permite conexoes MySQL vindas do ECS e da Lambda"
+  description = "Permite conexoes MySQL vindas do ECS"
   vpc_id      = aws_vpc.main.id
 
   ingress {

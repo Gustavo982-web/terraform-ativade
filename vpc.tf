@@ -8,6 +8,16 @@ resource "aws_vpc" "main" {
   }
 }
 
+
+resource "aws_vpc_block_public_access_exclusion" "lab" {
+  vpc_id                          = aws_vpc.main.id
+  internet_gateway_exclusion_mode = "allow-bidirectional"
+
+  tags = {
+    Name = "cosmos-tech-bpa-exclusion"
+  }
+}
+
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
@@ -81,4 +91,52 @@ resource "aws_route_table_association" "assoc_publica_a" {
 resource "aws_route_table_association" "assoc_publica_b" {
   subnet_id      = aws_subnet.publica_b.id
   route_table_id = aws_route_table.rota_publica.id
+}
+
+# -----------------------------------------------------------------------------
+# NAT Gateway + EIP: saida para a internet das subnets PRIVADAS (ECS)
+# O ECS passa a rodar nas subnets privadas (sem IP publico) e usa o NAT para
+# puxar a imagem do Docker Hub. O NAT fica numa subnet publica e sai via IGW.
+# -----------------------------------------------------------------------------
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "eip-nat-desafio"
+  }
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.publica_a.id
+
+  tags = {
+    Name = "nat-desafio"
+  }
+
+  depends_on = [aws_internet_gateway.igw]
+}
+
+resource "aws_route_table" "rota_privada" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+
+  tags = {
+    Name = "rt-privada"
+  }
+}
+
+resource "aws_route_table_association" "assoc_privada_a" {
+  subnet_id      = aws_subnet.privada_a.id
+  route_table_id = aws_route_table.rota_privada.id
+}
+
+resource "aws_route_table_association" "assoc_privada_b" {
+  subnet_id      = aws_subnet.privada_b.id
+  route_table_id = aws_route_table.rota_privada.id
 }

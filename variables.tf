@@ -24,7 +24,7 @@ variable "docker_image" {
 variable "email_alertas" {
   description = "E-mail para receber alertas do CloudWatch via SNS"
   type        = string
-  
+
 }
 
 variable "app_port" {
